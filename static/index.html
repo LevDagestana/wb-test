@@ -1,0 +1,40 @@
+<head> 
+    <meta charset="UTF-8"> 
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+    <title>Поиск заказа</title> 
+</head> 
+<body> 
+    <h1>Поиск заказа</h1> 
+    <form id="orderForm"> 
+        <label for="orderId">Введите ID заказа:</label> 
+        <input type="text" id="orderId" name="orderId" required> 
+        <button type="submit">Поиск</button> 
+    </form> 
+ 
+    <h2>Детали заказа</h2> 
+    <pre id="orderDetails"></pre> 
+ 
+    <script> 
+        document.getElementById('orderForm').addEventListener('submit', function(event) { 
+            event.preventDefault(); 
+             
+            const orderId = document.getElementById('orderId').value; 
+             
+            fetch(`http://localhost:8080/order?id=${orderId}`,{mode:"no-cors",method:"GET"}) 
+                .then(response => { 
+                    if (!response.ok) { 
+                        throw new Error('Order not found'); 
+                    } 
+                    return response.json(); 
+                }) 
+                .then(order => { 
+                    document.getElementById('orderDetails').textContent = JSON.stringify(order, null, 2); 
+                }) 
+                .catch(error => { 
+                    console.log(error)
+                    document.getElementById('orderDetails').textContent = `Error: ${error.message}`; 
+                }); 
+        }); 
+    </script> 
+</body> 
+</html>

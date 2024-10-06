@@ -1,0 +1,15 @@
+database:
+  user: "user_db"
+  password: "123"
+  dbname: "order_db"
+  sslmode: "disable"
+  driver_name: "postgres"
+
+kafka:
+  brokers:
+    - "localhost:9092"
+  topic: "order_topic"
+  group_id: "order_group"
+
+http:
+  port: ":8080"
