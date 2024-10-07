@@ -1,19 +1,20 @@
 package handlers
 
 import (
-	"encoding/json"
 	"net/http"
 	"wb/cache"
+
+	"github.com/gin-gonic/gin"
 )
 
-func GetOrderByIdHandler(w http.ResponseWriter, r *http.Request) {
-	id := r.URL.Query().Get("id")
+func GetOrderByIdHandler(c *gin.Context) {
+	id := c.Param("id")
 
 	value, exists := cache.Cache.GetCache(id)
 	if !exists {
-		http.Error(w, "Order not found", http.StatusNotFound)
+		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "Order not found"})
 		return
 	}
 
-	json.NewEncoder(w).Encode(value)
+	c.IndentedJSON(http.StatusOK, value)
 }

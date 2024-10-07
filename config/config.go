@@ -1,52 +1,42 @@
 package config
 
 import (
+	"os"
+	"path/filepath"
 	"wb/logger"
 
-	"github.com/spf13/viper"
+	"github.com/joho/godotenv"
 )
 
+// Config структура для хранения конфигураций
 type Config struct {
-	Database DatabaseConfig `mapstructure:"database"`
-	Kafka    KafkaConfig    `mapstructure:"kafka"`
-	Http     HttpConfig     `mapstructure:"http"`
+	DbDriverName string
+	DbScheme     string
+	KafkaBroker  string
+	KafkaTopic   string
+	KafkaGroupID string
+	Port         string
 }
 
-type DatabaseConfig struct {
-	User       string `mapstructure:"user"`
-	Password   string `mapstructure:"password"`
-	DBName     string `mapstructure:"dbname"`
-	SSLMode    string `mapstructure:"sslmode"`
-	DriverName string `mapstructure:"driver_name"`
-}
-
-type KafkaConfig struct {
-	Brokers []string `mapstructure:"brokers"`
-	Topic   string   `mapstructure:"topic"`
-	GroupID string   `mapstructure:"group_id"`
-}
-type HttpConfig struct {
-	Port string `mapstructure:"port"`
-}
-
-func LoadConfig() (config Config, err error) {
-	viper.SetConfigName("config")
-	viper.SetConfigType("yaml")
-	viper.AddConfigPath("./config")
-
-	viper.AutomaticEnv()
-
-	err = viper.ReadInConfig()
+func LoadConfig(path string) (*Config, error) {
+	dir, err := os.Getwd()
 	if err != nil {
-		logger.Log.WithError(err).Fatalf("Ошибка при чтении конфигурации:")
-		return
+		logger.Log.WithError(err).Fatal("")
+	}
+	err = godotenv.Load(filepath.Join(dir, path, ".env"))
+
+	if err != nil {
+		logger.Log.WithError(err).Error("Ошибка загрузки .env файла:")
 	}
 
-	err = viper.Unmarshal(&config)
-	if err != nil {
-		logger.Log.WithError(err).Fatalf("Ошибка при декодировании конфигурации: ")
-		return
+	cfg := &Config{
+		DbDriverName: os.Getenv("DB_DRIVER_NAME"),
+		DbScheme:     os.Getenv("DB_SCHEME"),
+		KafkaBroker:  os.Getenv("KAFKA_BROKER"),
+		KafkaTopic:   os.Getenv("KAFKA_TOPIC"),
+		KafkaGroupID: os.Getenv("KAFKA_GROUP_ID"),
+		Port:         os.Getenv("PORT"),
 	}
 
-	return config, nil
+	return cfg, nil
 }

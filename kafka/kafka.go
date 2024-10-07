@@ -6,34 +6,34 @@ import (
 
 	"wb/models"
 	"wb/repository"
-	"wb/validator"
 
 	"wb/config"
 
 	"wb/logger"
 
 	"github.com/IBM/sarama"
+	"github.com/go-playground/validator/v10"
 	"github.com/sirupsen/logrus"
 )
 
 type consumerGroupHandler struct{}
 
-func InitKafka(cfg config.KafkaConfig) {
+func InitKafka(cfg *config.Config) {
 
-	config := sarama.NewConfig()
-	config.Consumer.Group.Rebalance.Strategy = sarama.BalanceStrategyRoundRobin
-	config.Consumer.Offsets.Initial = sarama.OffsetOldest
+	saramaCfg := sarama.NewConfig()
+	saramaCfg.Consumer.Group.Rebalance.Strategy = sarama.BalanceStrategyRoundRobin
+	saramaCfg.Consumer.Offsets.Initial = sarama.OffsetOldest
 
-	brokers := cfg.Brokers
-	group := cfg.GroupID
-	topic := cfg.Topic
+	brokers := []string{cfg.KafkaBroker}
+	group := cfg.KafkaGroupID
+	topic := cfg.KafkaTopic
 
 	logger.Log.WithFields(logrus.Fields{
 		"brokers": brokers,
 		"group":   group,
 	}).Info("Создаем группу потребителей...")
 
-	consumerGroup, err := sarama.NewConsumerGroup(brokers, group, config)
+	consumerGroup, err := sarama.NewConsumerGroup(brokers, group, saramaCfg)
 	if err != nil {
 		logger.Log.WithError(err).Fatal("Ошибка при создании группы потребителей:")
 	}
@@ -69,7 +69,8 @@ func (handler *consumerGroupHandler) ConsumeClaim(session sarama.ConsumerGroupSe
 			logger.Log.WithError(err).Error("Ошибка при десериализации сообщения:")
 			continue
 		}
-		err = validator.ValidateOrder(order)
+		validate := validator.New()
+		err = validate.Struct(order)
 		if err != nil {
 			logger.Log.WithError(err).Error("Ошибка при валидации заказа")
 			continue

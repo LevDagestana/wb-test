@@ -13,22 +13,24 @@ import (
 
 	"wb/logger"
 
+	"github.com/gin-gonic/gin"
 	_ "github.com/lib/pq"
 )
 
 func main() {
 	logger.InitLogger()
+	router := gin.Default()
 
-	cfg, err := config.LoadConfig()
+	cfg, err := config.LoadConfig(".")
 	if err != nil {
 		logger.Log.WithError(err).Fatal("Ошибка загрузки конфигурации:")
 	}
-	db.InitDb(cfg.Database)
-	kafka.InitKafka(cfg.Kafka)
+	db.InitDb(cfg)
+	kafka.InitKafka(cfg)
 	repository.LoadCache()
-	http.Handle("/", http.FileServer(http.Dir("./static")))
+	router.StaticFS("/static", http.Dir("./static"))
 
-	http.HandleFunc("/order", handlers.GetOrderByIdHandler)
-	http.ListenAndServe(cfg.Http.Port, nil)
+	router.GET("/order/:id", handlers.GetOrderByIdHandler)
+	router.Run(cfg.Port)
 
 }

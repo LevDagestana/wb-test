@@ -2,7 +2,6 @@ package db
 
 import (
 	"database/sql"
-	"fmt"
 	"log"
 	"wb/config"
 	"wb/logger"
@@ -10,12 +9,11 @@ import (
 
 var Db *sql.DB
 
-func InitDb(cfg config.DatabaseConfig) {
-	connStr := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=%s",
-		cfg.User, cfg.Password, cfg.DBName, cfg.SSLMode)
+func InitDb(cfg *config.Config) {
+
 	var err error
 
-	Db, err = sql.Open(cfg.DriverName, connStr)
+	Db, err = sql.Open(cfg.DbDriverName, cfg.DbScheme)
 	if err != nil {
 		log.Fatal(err)
 	}

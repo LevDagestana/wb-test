@@ -4,20 +4,24 @@ import (
 	"os"
 	"time"
 
+	"wb/config"
 	"wb/logger"
 
 	"github.com/IBM/sarama"
 )
 
 func main() {
-	brokers := []string{"localhost:9092"}
-	topic := "order_topic"
+	cfg, err := config.LoadConfig("..")
+	if err != nil {
+		logger.Log.WithError(err).Fatal("Ошибка загрузки конфигурации:")
+	}
+	brokers := []string{cfg.KafkaBroker}
+	topic := cfg.KafkaTopic
+	saramaCfg := sarama.NewConfig()
+	saramaCfg.Producer.Return.Successes = true
+	saramaCfg.Producer.Timeout = 5 * time.Second
 
-	config := sarama.NewConfig()
-	config.Producer.Return.Successes = true
-	config.Producer.Timeout = 5 * time.Second
-
-	producer, err := sarama.NewSyncProducer(brokers, config)
+	producer, err := sarama.NewSyncProducer(brokers, saramaCfg)
 	if err != nil {
 
 		logger.Log.WithError(err).Fatal("Ошибка при создании Kafka producer:")
